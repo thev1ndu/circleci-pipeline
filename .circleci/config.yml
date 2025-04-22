@@ -1,0 +1,30 @@
+version: 2.1
+jobs:
+  build_test:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - run:
+          name: Installing NPM Dependencies
+          command: |
+            npm install --omit=dev
+  build_docker_image:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - setup_remote_docker:
+        docker_layer_caching: false
+      - run:
+        name: Building Docker Image
+        command: |
+          docker build -t app-using-circleci -t thev1ndu/app-using-circleci:latest .
+          echo $DOCKER_PASSWORD | docker login -u thev1ndu --password-stdin
+          docker push thev1ndu/app-using-circleci:latest
+
+workflows:
+  build_test:
+    jobs:
+      - build_test
+      - build_docker_image
